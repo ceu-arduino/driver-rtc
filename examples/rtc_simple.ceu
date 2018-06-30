@@ -1,0 +1,9 @@
+#include "wclock.ceu"
+#include "rtc.ceu"
+_Serial.begin(9600);
+await Rtc(on);
+
+loop do
+    await Rtc_get_time();
+    await 1s;
+end

@@ -1,0 +1,55 @@
+
+#include "../rtc.ceu"
+#include "i2c.ceu"
+
+native/pre do
+    #include "rtc.h"
+
+end
+
+code/await Rtc (var on/off v) -> none do
+    if v then
+        emit I2C(on);
+
+        outer.twi_transmit_buffer = [{DS3231_REG_CONTROL}];
+        emit I2C_REQUEST_SEND({DS3231_ADDRESS});
+        await I2C_REQUEST_DONE;
+        emit I2C_REQUEST_RECEIVE(DS3231_ADDRESS, 1);
+        await I2C_REQUEST_DONE;
+
+        var int value = outer.twi_receive_buffer[0];
+        value = value & 59;
+        
+        outer.twi_transmit_buffer = [{DS3231_REG_CONTROL},value];
+        emit I2C_REQUEST_SEND({DS3231_ADDRESS});
+        await I2C_REQUEST_DONE;
+    else
+
+    end
+end
+
+
+code/await Rtc_get_time (none) -> none do
+
+    outer.twi_transmit_buffer = [{DS3231_REG_TIME}];
+    emit I2C_REQUEST_SEND({DS3231_ADDRESS});
+    await I2C_REQUEST_DONE;
+
+    emit I2C_REQUEST_RECEIVE({DS3231_ADDRESS}, 7);
+    await I2C_REQUEST_DONE;
+
+    var u8 i;
+    loop i in [1-> $outer.twi_receive_buffer as u8] do
+        {Serial.println(bcd2dec(@(outer.twi_receive_buffer[i-1])));}
+    end
+    _Serial.println("bye");
+
+end
+
+
+
+
+
+
+
+
