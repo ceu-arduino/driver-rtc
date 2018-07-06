@@ -1,4 +1,8 @@
+/*
 
+
+
+*/
 #include "../rtc.ceu"
 #include "i2c.ceu"
 
@@ -6,22 +10,33 @@ native/pre do
     #include "rtc.h"
 end
 
-code/await Rtc (var on/off v) -> none do
+
+code/await Rtc_writeRegister8 (var u8 reg, var u8 value) -> none
+do
+    outer.twi_transmit_buffer = [reg,value];
+    emit I2C_REQUEST_SEND({DS3231_ADDRESS});
+    await I2C_REQUEST_DONE;
+end
+
+code/await Rtc_readRegister8 (var u8 reg) -> u8
+do
+    outer.twi_transmit_buffer = [reg];
+    emit I2C_REQUEST_SEND({DS3231_ADDRESS});
+    await I2C_REQUEST_DONE;
+    emit I2C_REQUEST_RECEIVE(DS3231_ADDRESS, 1);
+    await I2C_REQUEST_DONE;
+
+    escape outer.twi_receive_buffer[0] as u8;
+end
+
+code/await Rtc (var on/off v) -> none
+do
     if v then
         emit I2C(on,_);
 
-        outer.twi_transmit_buffer = [{DS3231_REG_CONTROL}];
-        emit I2C_REQUEST_SEND({DS3231_ADDRESS});
-        await I2C_REQUEST_DONE;
-        emit I2C_REQUEST_RECEIVE(DS3231_ADDRESS, 1);
-        await I2C_REQUEST_DONE;
-
-        var int value = outer.twi_receive_buffer[0];
+        var u8 value = await Rtc_readRegister8({DS3231_REG_CONTROL});
         value = value & 59;
-        
-        outer.twi_transmit_buffer = [{DS3231_REG_CONTROL},value];
-        emit I2C_REQUEST_SEND({DS3231_ADDRESS});
-        await I2C_REQUEST_DONE;
+        await Rtc_writeRegister8({DS3231_REG_CONTROL},value);
     else
         emit I2C(off,_);
     end
@@ -30,7 +45,6 @@ end
 
 code/await Rtc_get_time (var&[] u16 values) -> none
 do
-
     outer.twi_transmit_buffer = [{DS3231_REG_TIME}];
     emit I2C_REQUEST_SEND({DS3231_ADDRESS});
     await I2C_REQUEST_DONE;
@@ -42,39 +56,47 @@ do
     loop i in [0->6] do
         values = values .. [{bcd2dec(@outer.twi_receive_buffer[i])}];
     end
-    values[6]=values[6]+2000;
-    
-    // _Serial.print("year");
-    // _Serial.println({bcd2dec(@outer.twi_receive_buffer[6])} + 2000);
-    
-    // _Serial.print("month");
-    // _Serial.println({bcd2dec(@outer.twi_receive_buffer[5])});
-    
-    // _Serial.print("day");
-    // _Serial.println({bcd2dec(@outer.twi_receive_buffer[4])});
-    
-    // _Serial.print("dayOfWeek");
-    // _Serial.println({bcd2dec(@outer.twi_receive_buffer[3])});
-    
-    // _Serial.print("hour");
-    // _Serial.println({bcd2dec(@outer.twi_receive_buffer[2])});
-    
-    // _Serial.print("minute");
-    // _Serial.println({bcd2dec(@outer.twi_receive_buffer[1])});
-    
-    // _Serial.print("second");
-    // _Serial.println({bcd2dec(@outer.twi_receive_buffer[0])});
-
-    
+    values[6]=values[6]+2000;    
 end
 
 code/await Rtc_set_time (var u16 year,var u8 month, var u8 day, var u8 hour, var u8 minute, var u8 second) -> none do
-
     outer.twi_transmit_buffer = [{DS3231_REG_TIME},{dec2bcd(@second)},{dec2bcd(@minute)},{dec2bcd(@hour)},{dec2bcd(dow(@year, @month, @day))},{dec2bcd(@day)},{dec2bcd(@month)},{dec2bcd(@year-2000)},{DS3231_REG_TIME}];
+    //outer.twi_transmit_buffer = outer.twi_transmit_buffer = .. [{DS3231_REG_TIME}];
+    //outer.twi_transmit_buffer = outer.twi_transmit_buffer = .. [{dec2bcd(@second)}];
+    //outer.twi_transmit_buffer = outer.twi_transmit_buffer = .. [{dec2bcd(@minute)}];
+    //outer.twi_transmit_buffer = outer.twi_transmit_buffer = .. [{dec2bcd(@hour)}];
+    //outer.twi_transmit_buffer = outer.twi_transmit_buffer = .. [{dec2bcd(dow(@year, @month, @day))}];
+    //outer.twi_transmit_buffer = outer.twi_transmit_buffer = .. [{dec2bcd(@day)}];
+    //outer.twi_transmit_buffer = outer.twi_transmit_buffer = .. [{dec2bcd(@month)}];
+    //outer.twi_transmit_buffer = outer.twi_transmit_buffer = .. [{dec2bcd(@year-2000)}];
+    //outer.twi_transmit_buffer = outer.twi_transmit_buffer = .. [{DS3231_REG_TIME}];
+    
+    emit I2C_REQUEST_SEND({DS3231_ADDRESS});
+    await I2C_REQUEST_DONE;
+end
+
+
+
+
+code/await Rtc_force_conversion (none) -> none
+do
+    var u8 value;
+    value = await Rtc_readRegister8({DS3231_REG_CONTROL});
+    value = value | (1<<5);
+    await Rtc_writeRegister8({DS3231_REG_CONTROL}, value);
+end
+
+code/await Rtc_read_temperature (none) -> r32
+do
+    outer.twi_transmit_buffer = [{DS3231_REG_TEMPERATURE}];
     emit I2C_REQUEST_SEND({DS3231_ADDRESS});
     await I2C_REQUEST_DONE;
 
+    emit I2C_REQUEST_RECEIVE({DS3231_ADDRESS}, 2);
+    await I2C_REQUEST_DONE;
+    escape ( (((outer.twi_receive_buffer[0] << 8) | outer.twi_receive_buffer[1]) >> 6) as r32) / 4.0;
 end
+
 
 // void DS3231::setDateTime(uint32_t t)
 // {
