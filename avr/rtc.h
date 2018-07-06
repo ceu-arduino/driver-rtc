@@ -71,4 +71,7 @@ uint8_tdec2bcd(uint8_t dec)
     return ((dec / 10) * 16) + (dec % 10);
 }
 
+const uint8_t daysArray [] PROGMEM = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+const uint8_t dowArray[] PROGMEM = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
+
 #endif

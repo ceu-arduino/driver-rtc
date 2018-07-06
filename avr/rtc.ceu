@@ -4,12 +4,11 @@
 
 native/pre do
     #include "rtc.h"
-
 end
 
 code/await Rtc (var on/off v) -> none do
     if v then
-        emit I2C(on);
+        emit I2C(on,_);
 
         outer.twi_transmit_buffer = [{DS3231_REG_CONTROL}];
         emit I2C_REQUEST_SEND({DS3231_ADDRESS});
@@ -37,13 +36,27 @@ code/await Rtc_get_time (none) -> none do
 
     emit I2C_REQUEST_RECEIVE({DS3231_ADDRESS}, 7);
     await I2C_REQUEST_DONE;
-
-    var u8 i;
-    loop i in [1-> $outer.twi_receive_buffer as u8] do
-        {Serial.println(bcd2dec(@(outer.twi_receive_buffer[i-1])));}
-    end
-    _Serial.println("bye");
-
+    
+    _Serial.print("year");
+    _Serial.println({bcd2dec(@outer.twi_receive_buffer[6])} + 2000);
+    
+    _Serial.print("month");
+    _Serial.println({bcd2dec(@outer.twi_receive_buffer[5])});
+    
+    _Serial.print("day");
+    _Serial.println({bcd2dec(@outer.twi_receive_buffer[4])});
+    
+    _Serial.print("dayOfWeek");
+    _Serial.println({bcd2dec(@outer.twi_receive_buffer[3])});
+    
+    _Serial.print("hour");
+    _Serial.println({bcd2dec(@outer.twi_receive_buffer[2])});
+    
+    _Serial.print("minute");
+    _Serial.println({bcd2dec(@outer.twi_receive_buffer[1])});
+    
+    _Serial.print("second");
+    _Serial.println({bcd2dec(@outer.twi_receive_buffer[0])});
 end
 
 
