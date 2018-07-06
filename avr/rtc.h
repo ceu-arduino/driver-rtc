@@ -66,12 +66,27 @@ uint8_t bcd2dec(uint8_t bcd)
     return ((bcd / 16) * 10) + (bcd % 16);
 }
 
-uint8_tdec2bcd(uint8_t dec)
+uint8_t dec2bcd(uint8_t dec)
 {
     return ((dec / 10) * 16) + (dec % 10);
 }
 
 const uint8_t daysArray [] PROGMEM = { 31,28,31,30,31,30,31,31,30,31,30,31 };
 const uint8_t dowArray[] PROGMEM = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
+
+uint8_t dow(uint16_t y, uint8_t m, uint8_t d)
+{
+    uint8_t dow;
+
+    y -= m < 3;
+    dow = ((y + y/4 - y/100 + y/400 + pgm_read_byte(dowArray+(m-1)) + d) % 7);
+
+    if (dow == 0)
+    {
+        return 7;
+    }
+
+    return dow;
+}
 
 #endif
