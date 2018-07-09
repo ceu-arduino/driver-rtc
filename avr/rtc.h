@@ -11,8 +11,7 @@
 #define DS3231_REG_STATUS           (0x0F)
 #define DS3231_REG_TEMPERATURE      (0x11)
 
-#ifndef RTCDATETIME_STRUCT_H
-#define RTCDATETIME_STRUCT_H
+/*
 struct RTCDateTime
 {
     uint16_t year;
@@ -32,7 +31,7 @@ struct RTCAlarmTime
     uint8_t minute;
     uint8_t second;
 };
-#endif
+*/
 
 typedef enum
 {
