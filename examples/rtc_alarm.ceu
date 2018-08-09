@@ -149,9 +149,9 @@ loop do
 
   // await Rtc_is_alarm2(false) if you want clear alarm2 flag manualy by Rtc_clear_alarm2();
   var bool isAlarm2 = await Rtc_is_alarm2(true);
-  if isAlarm2 then
-    _Serial.println("ALARM 2 TRIGGERED!");
-  end
+    if isAlarm2 then
+        _Serial.println("ALARM 2 TRIGGERED!");
+    end
  
-  await 1s;
+    await 1s;
 end

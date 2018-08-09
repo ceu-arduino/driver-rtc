@@ -9,11 +9,11 @@ loop do
     var[7] u16 time_data;
     await Rtc_get_time(&time_data);
     _Serial.print("Date and Time: ");
-    _Serial.print(time_data[6]);   _Serial.print("-");
-    _Serial.print(time_data[5]);  _Serial.print("-");
+    _Serial.print(time_data[6]);    _Serial.print("-");
+    _Serial.print(time_data[5]);    _Serial.print("-");
     _Serial.print(time_data[4]);    _Serial.print(" ");
-    _Serial.print(time_data[2]);   _Serial.print(":");
-    _Serial.print(time_data[1]); _Serial.print(":");
-    _Serial.print(time_data[0]); _Serial.println("");
+    _Serial.print(time_data[2]);    _Serial.print(":");
+    _Serial.print(time_data[1]);    _Serial.print(":");
+    _Serial.print(time_data[0]);    _Serial.println("");
     await 1s;
 end
